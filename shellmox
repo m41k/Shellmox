@@ -2,6 +2,8 @@
 
 # Maik Alberto - maik.alberto@hotmail.com
 
+export ANSIBLE_HOST_KEY_CHECKING=False
+
 #Configuracao
  CONFPVE=.pvecfg
    if [ -e $CONFPVE ]; then
