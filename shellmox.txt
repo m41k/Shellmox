@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# Maik Alberto - maik.alberto@hotmail.com
+
+#Configuracao
+ CONFPVE=.pvecfg
+   if [ -e $CONFPVE ]; then
+    HOST=`sed '1p; d' .pvecfg`
+    AHOST="api_host=$HOST"
+    USER=`sed '2p; d' .pvecfg`
+    AUSER="api_user=$USER@pam"
+    PASS=`sed '3p; d' .pvecfg | base64 -d`
+    APASS=api_password=$PASS
+    ACMD="ansible proxmox -c local -m proxmox -a"
+    PLIC="'"
+    VVVV="-vvvv"
+
+   else
+    echo '------------------------------'
+    echo 'CONFIGURANDO ACESSO AO PROXMOX'
+    echo '------------------------------'
+    read -p "Host....: " HOST;
+    read -p "User....: " USER;
+    read -sp "Password: " PASS;
+    echo $HOST >  $CONFPVE
+    echo $USER >> $CONFPVE
+    echo $PASS | base64 >> $CONFPVE
+   fi
+
+OP=('list' 'lxc-ls' 'templates' 'id' 'create')
+
+#Funcao para rodar proxmoxAPI(proxmoxer) python
+
+function list (){
+python -c '
+import base64
+f = open(".pvecfg", "r")
+host = f.readline().replace("\n", "")
+user = f.readline().replace("\n", "")+"@pam"
+pas1 = f.readline().replace("\n", "")
+pas2 = base64.b64decode(pas1).replace("\n", "")
+
+from proxmoxer import ProxmoxAPI; proxmox = ProxmoxAPI(host, user=user, password=pas2, verify_ssl=False)
+for vm in proxmox.cluster.resources.get(type="vm"): print("{0}. {1} => {2}" .format(vm["vmid"], vm["name"], vm["status"]))
+
+f.close()
+'
+}
+
+#Argumentacao
+
+case $1 in
+ #Listar todas VMS
+	${OP[0]})
+	list | sort
+	exit 0
+	;;
+  #LXC-LS
+	${OP[1]})
+	ansible $HOST -u $USER -m shell -a "${OP[1]} -f" -e ansible_ssh_pass=$PASS
+	exit 0
+ 	;;
+  #Lista templates
+	${OP[2]})
+	ansible $HOST -u $USER -m shell -a "ls /var/lib/vz/template/cache/" -e ansible_ssh_pass=$PASS
+	exit 0
+ 	;;
+  #Id action (start|stop|destory)
+        [0-9][0-9][0-9])
+        if [ $2 = 'start' ]; then
+         ansible $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=started"
+        elif [ $2 = 'stop' ]; then
+         ansible $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=stopped"
+        elif [ $2 = 'destroy' ]; then
+         ansible $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=absent"
+        fi
+	;;
+  #Create container
+	${OP[4]})
+	read -p "Node.....: " CNODE;
+        	if [ ! -z $CNODE ]; then CNODE="node=$CNODE"; fi
+	read -p "VM ID....: " CVMID;
+        	if [ ! -z $CVMID ]; then CVMID="vmid=$CVMID"; fi
+	read -p "Hostname.: " CHNAM;
+        	if [ ! -z $CHNAM ]; then CHNAM="hostname=$CHNAM"; fi
+	read -p "Password.: " CPASS;
+        	if [ ! -z $CPASS ]; then CPASS="password=$CPASS"; fi
+	read -p "Disco GB.: " CDISK;
+        	if [ ! -z $CDISK ]; then CDISK="disk=local-lvm:$CDISK"; fi
+	read -p "Template.: " CTEMP;
+        	if [ ! -z $CTEMP ]; then CTEMP="ostemplate=local:vztmpl/$CTEMP"; fi
+	read -p "CPU limit: " CCPUL;
+        	if [ ! -z $CCPUL ]; then CCPUL="cpus=$CCPUL"; fi
+	read -p "CPU units: " CCPUU;
+        	if [ ! -z $CCPUU ]; then CCPUU="cpuunits=$CCPUU"; fi
+	read -p "Memory...: " CMEMB;
+        	if [ ! -z $CMEMB ]; then CMEMB="memory=$CMEMB"; fi
+	read -p "Swap.....: " CSWAP;
+        	if [ ! -z $CSWAP ]; then CSWAP="swap=$CSWAP"; fi
+	read -p "NETIF[DHCP]: " CREDE;
+        	CREDE="netif={\"net0\":\"name=eth0,ip=dhcp,bridge=vmbr0\"}"
+        	#if [ ! -z $CREDE ]; then CREDE="netif=$CREDE"; fi
+	read -p "DNS......: " CEDNS;
+        	if [ ! -z $CEDNS ]; then CEDNS="nameserver=$CEDNS"; fi
+
+	eval $ACMD $PLIC $AHOST $AUSER $APASS $CNODE $CVMID $CHNAM $CPASS $CDISK $CTEMP $CCPUL $CMEMB $CSWAP $CREDE $PLIC $VVVV
+	;;
+
+esac
