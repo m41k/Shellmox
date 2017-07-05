@@ -15,7 +15,7 @@ export ANSIBLE_HOST_KEY_CHECKING=False
     AUSER="api_user=$USER@pam"
     APASS="api_password=$PASS"
 
-    ACMD="ansible $HOST -c local -m proxmox -a"
+    ACMD="ansible -i $CONF $HOST -c local -m proxmox -a"
     PLIC="'"
     VVVV="-vvvv"
 
