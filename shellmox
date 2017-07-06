@@ -79,7 +79,7 @@ case $1 in
         if [ $2 = 'start' ]; then
          ansible -i $CONF $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=started"
         elif [ $2 = 'stop' ]; then
-         ansible $CONF $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=stopped"
+         ansible -i $CONF $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=stopped"
         elif [ $2 = 'destroy' ]; then
          ansible -i $CONF $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=absent"
         fi
