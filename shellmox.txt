@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# Maik Alberto - maik.alberto@hotmail.com
+
+export ANSIBLE_HOST_KEY_CHECKING=False
+
+#Configuracao
+ CONF=$HOME/.shellmox/.moxcfg
+   if [ -e $CONF ]; then
+    HOST=`sed '2p; d' $CONF`
+    USER=`sed '3p; d' $CONF`
+    PASS=`sed '4p; d' $CONF | base64 -d`
+
+    AHOST="api_host=$HOST"
+    AUSER="api_user=$USER@pam"
+    APASS="api_password=$PASS"
+
+    ACMD="ansible -i $CONF $HOST -c local -m proxmox -a"
+    PLIC="'"
+    VVVV="-vvvv"
+
+   else
+    mkdir $HOME/.shellmox 2> /dev/null
+    echo '------------------------------'
+    echo 'CONFIGURANDO ACESSO AO PROXMOX'
+    echo '------------------------------'
+    read -p "Host....: " HOST;
+    read -p "User....: " USER;
+    read -sp "Password: " PASS; printf "\n"
+    echo "[shellmox]" > $CONF
+    echo $HOST >>  $CONF
+    echo $USER >> $CONF
+    echo $PASS | base64 >> $CONF
+   fi
+
+OP=('list' 'lxc-ls' 'templates' 'id' 'create' 'config')
+
+#Funcao para rodar proxmoxAPI(proxmoxer) python
+
+function list (){
+python -c '
+import base64
+import commands
+path = commands.getoutput("echo $HOME")
+f = open(path+"/.shellmox/.moxcfg", "r")
+name = f.readline().replace("\n", "")
+host = f.readline().replace("\n", "")
+user = f.readline().replace("\n", "")+"@pam"
+pas1 = f.readline().replace("\n", "")
+pas2 = base64.b64decode(pas1).replace("\n", "")
+
+from proxmoxer import ProxmoxAPI; proxmox = ProxmoxAPI(host, user=user, password=pas2, verify_ssl=False)
+for vm in proxmox.cluster.resources.get(type="vm"): print("{0}. {1} => {2}" .format(vm["vmid"], vm["name"], vm["status"]))
+
+f.close()
+'
+}
+
+#Argumentacao
+
+case $1 in
+ #Listar todas VMS
+	${OP[0]})
+	list | sort
+	exit 0
+	;;
+  #LXC-LS
+	${OP[1]})
+	ansible -i $CONF $HOST -u $USER -m shell -a "${OP[1]} -f" -e ansible_ssh_pass=$PASS
+	exit 0
+ 	;;
+  #Lista templates
+	${OP[2]})
+	ansible -i $CONF $HOST -u $USER -m shell -a "ls /var/lib/vz/template/cache/" -e ansible_ssh_pass=$PASS
+	exit 0
+ 	;;
+  #Id action (start|stop|destory)
+        [0-9][0-9][0-9])
+        if [ $2 = 'start' ]; then
+         ansible -i $CONF $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=started"
+        elif [ $2 = 'stop' ]; then
+         ansible $CONF $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=stopped"
+        elif [ $2 = 'destroy' ]; then
+         ansible -i $CONF $HOST -c local -m proxmox -a "vmid=$1 api_user=$USER@pam api_password=$PASS api_host=$HOST state=absent"
+        fi
+	;;
+  #Create container
+	${OP[4]})
+	read -p "Node.....: " CNODE;
+        	if [ ! -z $CNODE ]; then CNODE="node=$CNODE"; fi
+	read -p "VM ID....: " CVMID;
+        	if [ ! -z $CVMID ]; then CVMID="vmid=$CVMID"; fi
+	read -p "Hostname.: " CHNAM;
+        	if [ ! -z $CHNAM ]; then CHNAM="hostname=$CHNAM"; fi
+	read -sp "Password.: " CPASS; printf "\n"
+        	if [ ! -z $CPASS ]; then CPASS="password=$CPASS"; fi
+	read -p "Disco GB.: " CDISK;
+        	if [ ! -z $CDISK ]; then CDISK="disk=local-lvm:$CDISK"; fi
+	read -p "Template.: " CTEMP;
+        	if [ ! -z $CTEMP ]; then CTEMP="ostemplate=local:vztmpl/$CTEMP"; fi
+	read -p "CPU limit: " CCPUL;
+        	if [ ! -z $CCPUL ]; then CCPUL="cpus=$CCPUL"; fi
+	read -p "CPU units: " CCPUU;
+        	if [ ! -z $CCPUU ]; then CCPUU="cpuunits=$CCPUU"; fi
+	read -p "Memory...: " CMEMB;
+        	if [ ! -z $CMEMB ]; then CMEMB="memory=$CMEMB"; fi
+	read -p "Swap.....: " CSWAP;
+        	if [ ! -z $CSWAP ]; then CSWAP="swap=$CSWAP"; fi
+	read -p "NETIF[DHCP]: " CREDE;
+        	CREDE="netif={\"net0\":\"name=eth0,ip=dhcp,bridge=vmbr0\"}"
+        	#if [ ! -z $CREDE ]; then CREDE="netif=$CREDE"; fi
+	read -p "DNS......: " CEDNS;
+        	if [ ! -z $CEDNS ]; then CEDNS="nameserver=$CEDNS"; fi
+
+	eval $ACMD $PLIC $AHOST $AUSER $APASS $CNODE $CVMID $CHNAM $CPASS $CDISK $CTEMP $CCPUL $CMEMB $CSWAP $CREDE $PLIC $VVVV
+	;;
+  #Reconfigure
+	${OP[5]})
+	rm $CONF
+	$0
+	;; 
+
+esac
