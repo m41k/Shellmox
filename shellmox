@@ -31,6 +31,7 @@ export ANSIBLE_HOST_KEY_CHECKING=False
     echo $HOST >>  $CONF
     echo $USER >> $CONF
     echo $PASS | base64 >> $CONF
+    chmod 600 $CONF
    fi
 
 #OP=('list' 'lxc-ls' 'templates' 'id' 'create' 'config')
