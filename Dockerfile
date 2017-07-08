@@ -1,7 +1,7 @@
 FROM alpine
 MAINTAINER Maik Alberto <maik.alberto@hotmail.com>
 
-ADD https://raw.githubusercontent.com/m41k/Shellmox/master/shellmox  /usr$
+ADD https://raw.githubusercontent.com/m41k/shellmox/master/shellmoxALPINE  /usr/bin/shellmox
 
 RUN apk update \
     && apk add ansible py2-pip build-base python-dev \
