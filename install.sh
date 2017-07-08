@@ -15,6 +15,6 @@ pip install proxmoxer
 pip install requests
 pip install paramiko
 
-wget https://raw.githubusercontent.com/m41k/Shellmox/master/shellmox
+wget https://raw.githubusercontent.com/m41k/shellmox/master/shellmox
 chmod +x shellmox
 mv shellmox /usr/bin/
