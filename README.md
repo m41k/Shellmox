@@ -7,22 +7,22 @@ Install
 |  \install.sh
 |
 |-Dockerfile
-|\Create ALPINE with shellmox in Docker. (<100Mb)
+| \Create ALPINE with shellmox in Docker. (<100Mb)
 
 shellmox
 |
 |list
-|\list all (vm/ct).
+| \list all (vm/ct).
 |
 |lxc-ls
-|\list lxc.
+| \list lxc.
 |
 |templates
-|\list containers templates.
+| \list containers templates.
 |
 |id [start/stop/destroy]
-|\action on the lxc container.
+| \action on the lxc container.
 |
 |config
-|\Configure shellmox access proxmox. 
-| \config runs on the first run of shellmox.
+| \Configure shellmox access proxmox. 
+|  \config runs on the first run of shellmox.
