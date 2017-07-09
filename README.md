@@ -2,7 +2,6 @@
 REMOTE Proxmox command line
 
 <pre>
-
 Install
 |-Ubuntu 16.04
 |  \install.sh
@@ -13,16 +12,16 @@ Install
 shellmox
 |
 |list
-|\list all (vm/ct)
+|\list all (vm/ct).
 |
 |lxc-ls
-|\list lxc
+|\list lxc.
 |
 |templates
-|\list templates
+|\list containers templates.
 |
 |id [start/stop/destroy]
-|\action on the lxc container
+|\action on the lxc container.
 |
 |config
 |\Configure shellmox access proxmox. 
