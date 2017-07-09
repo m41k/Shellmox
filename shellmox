@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Maik Alberto - maik.alberto@hotmail.com
 
@@ -26,7 +26,10 @@ export ANSIBLE_HOST_KEY_CHECKING=False
     echo '------------------------------'
     read -p "Host....: " HOST;
     read -p "User....: " USER;
-    read -sp "Password: " PASS; printf "\n"
+#RMsh    read -sp "Password: " PASS; printf "\n"
+    stty -echo
+    read -p "Password: " PASS; echo
+    stty echo
     echo "[shellmox]" > $CONF
     echo $HOST >>  $CONF
     echo $USER >> $CONF
@@ -34,11 +37,11 @@ export ANSIBLE_HOST_KEY_CHECKING=False
     chmod 600 $CONF
    fi
 
-#OP=('list' 'lxc-ls' 'templates' 'id' 'create' 'config')
+#RMSh OP=('list' 'lxc-ls' 'templates' 'id' 'create' 'config')
 
 #Funcao para rodar proxmoxAPI(proxmoxer) python
 
-function list (){
+function list(){
 python -c '
 import base64
 import commands
