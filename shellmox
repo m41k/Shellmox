@@ -37,11 +37,12 @@ export ANSIBLE_HOST_KEY_CHECKING=False
     chmod 600 $CONF
    fi
 
-#RMSh OP=('list' 'lxc-ls' 'templates' 'id' 'create' 'config')
+#RMsh OP=('list' 'lxc-ls' 'templates' 'id' 'create' 'config')
 
 #Funcao para rodar proxmoxAPI(proxmoxer) python
 
-function list(){
+#RMsh function 
+list(){
 python -c '
 import base64
 import commands
