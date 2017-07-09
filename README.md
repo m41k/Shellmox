@@ -1,6 +1,8 @@
 # Shellmox
 REMOTE Proxmox command line
 
+<pre>
+
 Install
 |-Ubuntu 16.04
 |  \install.sh
