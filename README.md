@@ -20,7 +20,7 @@ shellmox
 |templates
 | \list containers templates.
 |
-|id [start/stop/destroy]
+|{id} [start/stop/destroy]
 | \action on the lxc container.
 |
 |config
