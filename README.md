@@ -5,7 +5,7 @@ REMOTE Proxmox command line
 Install
 |-Ubuntu 16.04
 |  \install.sh
-|
+or
 |-Dockerfile
 | \Create ALPINE with shellmox in Docker. (<100Mb)
 
